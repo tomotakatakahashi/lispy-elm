@@ -2,6 +2,8 @@
 
 This work is based on _[(How to Write a (Lisp) Interpreter (in Python))](http://norvig.com/lispy.html)_.
 
+![demo](./demo.gif)
+
 ## Deployment
 `elm make src/* --output deployment/index.js --optimize`
 
