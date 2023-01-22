@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  DomainName:
+    Type: String
+    Default: ""
+  LoggingBucketName:
+    Type: String
+  ContentBucketName:
+    Type: String
+  AcmCertificateArn:
+    Type: String
+    Default: ""
+    Description: us-east-1 only
+Resources:
+  ContentBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ContentBucketName
+      PolicyDocument:
+        Version: 2012-10-17
+        Id: PolicyForCloudFront
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              CanonicalUser: !GetAtt CDNOriginAccessIdentity.S3CanonicalUserId
+            Action: s3:GetObject
+            Resource: !Sub arn:aws:s3:::${ContentBucketName}/*
+  CDNOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: ""
+  CDNDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          Compress: true
+          ForwardedValues:
+            QueryString: true
+          TargetOriginId: origin1
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        IPV6Enabled: true
+        Logging:
+          Bucket: !Sub ${LoggingBucketName}.s3.amazonaws.com
+          IncludeCookies: false
+        Origins:
+          -
+            DomainName: !Sub ${ContentBucketName}.s3-${AWS::Region}.amazonaws.com
+            Id: origin1
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CDNOriginAccessIdentity}
+        ViewerCertificate:
+          AcmCertificateArn: !Ref AcmCertificateArn
+          CloudFrontDefaultCertificate: !Ref "AWS::NoValue"
+          MinimumProtocolVersion: TLSv1.2_2018
+          SslSupportMethod: sni-only
