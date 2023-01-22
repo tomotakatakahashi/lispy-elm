@@ -192,14 +192,14 @@ fibonacciListSample =
         (reverseListHelper (cons (car arg) ret) (cdr arg)))))
   (define reverseList
     (lambda (lst) (reverseListHelper nil lst)))
-  (define nextFibonacci
-    (lambda (history)
-      (+ (car history) (car (car history)))))
   (define reversedFibonacciList
     (lambda (size)
-      (begin
-        (define prev (if (= size 2) (quote (1 1)) (reversedFibonacciList (- size 1))))
-        (cons (+ (car prev) (car (cdr prev))) prev))))
+      (if (<= size 0) (quote ())
+        (if (= size 1) (quote (1))
+          (if (= size 2) (quote (1 1))
+            (begin
+              (define prev (reversedFibonacciList (- size 1)))
+              (cons (+ (car prev) (car (cdr prev))) prev)))))))
   (define fibonacciList (lambda (size) (reverseList (reversedFibonacciList size))))
   (fibonacciList listSize))
 """
